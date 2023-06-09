@@ -24,7 +24,7 @@ def merge_pdfs(parent_dir,out_full_path):
 
 
 
-        pdfs = glob.glob(os.path.join(parent_dir, "/**/*.pdf"), recursive=True)
+        pdfs = glob.glob(os.path.join(parent_dir, "/**/*_ocr.pdf"), recursive=True)
 
 
 
