@@ -4,6 +4,7 @@ from time import sleep
 import traceback
 import sys
 from PyPDF2 import PdfReader
+import random
 
 
 # ocrmypdf                      # it's a scriptable command line program
@@ -31,7 +32,6 @@ def main(path="quantums/Big_Data_Quantum-m.pdf", nn=50):
     if "_ocr" in path or "all_in_one" in path:
         return
 
-    # ocr_file_name = "quantums/Big_Data_Quantum-m_ocr.pdf"
     ocr_file_name = path.replace(".pdf", "_ocr.pdf")
 
     # print("ocr_file_name", ocr_file_name)
@@ -95,15 +95,14 @@ length_per_page : {length_per_page}
                 "ocrmypdf",
                 "-l",
                 "eng",
-                "--rotate-pages",
-                "--deskew",
+                # "--rotate-pages",
+                # "--deskew",
                 "--force-ocr",
                 path,
                 ocr_file_name,
             ]
         )
 
-        # commit and push ocr
 
         subprocess.call(["git", "add", "-A"])
 
@@ -139,13 +138,18 @@ if __name__ == "__main__":
 
     files = sorted_files
 
+
+    # sort in the reverse ordder
+
+    files = files[::-1]
+
     # import random
 
     # random.shuffle(files)
 
-    # from concurrent.futures import ProcessPoolExecutor
+    # from concurrent.futures import ThreadPoolExecutor
 
-    # with ProcessPoolExecutor() as executor:
+    # with ThreadPoolExecutor(max_workers=10) as executor:
     #     executor.map(try_main, files)
 
     for i in files:

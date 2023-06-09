@@ -9,7 +9,12 @@ for s in ["savita-bhabhi"]:
         if not os.path.exists("images/" + s + "/" + str(i)):
             os.makedirs("images/" + s + "/" + str(i))
 
+        print("episode", i)
+
         for j in range(1, 100):
+
+            print("page", j)
+
             url = f"https://kirtuclub.com/wp-content/uploads/2023/05/savita-bhabhi-episode-{i}-{j}.jpg"
 
             filepath = "images/" + s + "/" + str(i) + "/" + str(j) + ".jpg"
