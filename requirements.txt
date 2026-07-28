@@ -1,0 +1,4 @@
+PyPDF2>=3.0
+requests>=2.28
+pytest>=8.0
+ocrmypdf>=15.0

@@ -1,27 +1,30 @@
-# private-pdf-download
+# kirtuclub-downloader
 
-A Python toolkit for downloading, merging, and OCR-processing PDF files — originally built for batch-downloading and processing Savita Bhabhi comic episodes from KirtuClub.
+A Python toolkit for downloading, merging, and OCR-processing PDF files from KirtuClub.
 
 ## Overview
 
-`private-pdf-download` is a collection of Python utilities that automate the workflow of fetching scanned comic pages from a web source, merging them into full PDF episodes, and running OCR to produce searchable PDFs. The project includes:
+`kirtuclub-downloader` is a collection of Python utilities that automate the workflow of fetching scanned comic pages from KirtuClub, merging them into full PDF episodes, and running OCR to produce searchable PDFs. The project includes:
 
-- **Image downloader** — fetches individual page images from a remote source and saves them in episode directories.
+- **Image downloader** — fetches individual page images from KirtuClub and saves them in episode directories.
 - **PDF merger** — combines multiple page-level PDFs into a single per-episode PDF file.
 - **OCR batch processor** — runs `ocrmypdf` to add searchable text layers to scanned PDFs.
 
 ## Project Structure
 
 ```
-private-pdf-download/
+kirtuclub-downloader/
 ├── README.md
 ├── LICENSE
 ├── .gitignore
 ├── scripts/
-│   ├── download_images.py    # Download page images from remote source
+│   ├── download_images.py    # Download page images from KirtuClub
 │   ├── merge_pdfs.py         # Merge page PDFs into per-episode PDFs
 │   ├── ocr_batch.py          # Batch OCR processing on scanned PDFs
 │   └── utils.py              # Shared utility (HTTP download helper)
+├── tests/
+│   ├── test_utils.py         # Tests for utility functions
+│   └── test_merge_pdfs.py    # Tests for PDF merging
 └── content/
     └── savita-bhabhi/
         ├── episode-01-to-57/   # 57 episodes (original + OCR PDFs)
