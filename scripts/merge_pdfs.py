@@ -1,55 +1,45 @@
-"""Merge all PDFs in subdirectories into single PDF files."""
+import argparse
 import glob
 import os
 import PyPDF2
 
 
-def merge_pdfs(parent_dir, out_full_path):
-    if not os.path.exists(out_full_path):
-        if os.path.exists(os.path.join(parent_dir, "large.txt")):
-            print("large.txt exists, so we will not merge the pdfs")
-            return
-        pdfs = glob.glob(os.path.join(parent_dir, "/**/*_ocr.pdf"), recursive=True)
-        pdfs.sort()
-        print(pdfs)
-        merger = PyPDF2.PdfMerger()
-        for pdf in pdfs:
-            try:
-                if os.path.getsize(out_full_path) > 50000000 or "_in_one.pdf" in pdf:
-                    print("output file is too large, so we will not merge the pdfs")
-                    continue
-                merger.append(pdf)
-            except Exception as error:
-                print(error)
-                print("error with", pdf)
-        merger.write(out_full_path)
-        if os.path.getsize(out_full_path) > 90000000:
-            os.remove(out_full_path)
-            print("deleted", out_full_path)
-            with open(os.path.join(parent_dir, "large.txt"), "w") as file:
-                file.write("The following files are too large to be merged into one pdf file: \n")
-                for pdf in pdfs:
-                    file.write(pdf + " is of size " + str(os.path.getsize(pdf)) + "\n")
-        else:
-            print("kept", out_full_path)
+def merge_pdfs(pdfs, out_path):
+    if os.path.exists(out_path):
+        return
+    merger = PyPDF2.PdfMerger()
+    for pdf in sorted(pdfs):
+        try:
+            merger.append(pdf)
+        except Exception:
+            pass
+    merger.write(out_path)
+    if os.path.exists(out_path):
+        size_mb = os.path.getsize(out_path) / (1024 * 1024)
+        if size_mb > 90:
+            os.remove(out_path)
+            with open(os.path.join(os.path.dirname(out_path), "large.txt"), "w") as f:
+                f.write(f"{out_path} was {size_mb:.0f} MB — too large to keep\n")
+
+
+def collect_ocr_pdfs(search_root):
+    return glob.glob(os.path.join(search_root, "**", "*_ocr.pdf"), recursive=True)
 
 
 def main():
-    all_pdfs = glob.glob("**/*.pdf", recursive=True)
-    folders = []
-    for pdf_file in all_pdfs:
-        parent_dir = os.path.dirname(pdf_file)
-        folders.append(parent_dir)
-    folders = list(set(folders))
-    print(folders)
-    for parent_dir in folders:
-        print(parent_dir)
-        out_full_path = os.path.join(parent_dir, parent_dir.replace("/", "_") + "_all_in_one.pdf")
-        try:
-            merge_pdfs(parent_dir, out_full_path)
-        except Exception as error:
-            print(error)
-            print("error with", parent_dir)
+    parser = argparse.ArgumentParser(description="Merge OCR PDFs into single files")
+    parser.add_argument("--root", default="content", help="Root directory to search for PDFs")
+    args = parser.parse_args()
+
+    folders = set()
+    for pdf in collect_ocr_pdfs(args.root):
+        folders.add(os.path.dirname(pdf))
+
+    for folder in sorted(folders):
+        pdfs = sorted(glob.glob(os.path.join(folder, "*_ocr.pdf")))
+        out_name = folder.replace(os.sep, "_") + "_all_in_one.pdf"
+        out_path = os.path.join(folder, out_name)
+        merge_pdfs(pdfs, out_path)
 
 
 if __name__ == "__main__":

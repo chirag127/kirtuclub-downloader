@@ -1,74 +1,59 @@
+import argparse
+import glob
 import os
+import random
 import subprocess
-from time import sleep
 import traceback
-import sys
+
 from PyPDF2 import PdfReader
 
+TEXT_THRESHOLD = 50
 
-def main(path="content/savita-bhabhi/episode-01-to-57/"):
-    print(path)
-    subprocess.call(["git", "pull"])
+
+def needs_ocr(path, threshold=TEXT_THRESHOLD):
     if "_ocr" in path or "all_in_one" in path:
-        return
-    ocr_file_name = path.replace(".pdf", "_ocr.pdf")
-    if os.path.exists(ocr_file_name):
-        print("file already exist")
-        return
+        return False
+    ocr_path = path.replace(".pdf", "_ocr.pdf")
+    if os.path.exists(ocr_path):
+        return False
     reader = PdfReader(path)
-    print("total_pages", len(reader.pages))
-    total_pages = len(reader.pages)
-    all_text = ""
-    if total_pages > 10:
-        import random
-        random_sample = random.sample(range(total_pages), 10)
-        total_pages = 10
-    else:
-        random_sample = range(total_pages)
-    for i in random_sample:
-        page = reader.pages[i]
+    total = len(reader.pages)
+    sample_size = min(total, 10)
+    pages = random.sample(range(total), sample_size) if total > 10 else range(total)
+    text = ""
+    for i in pages:
         try:
-            text = page.extract_text()
-            all_text += text
-        except Exception as error:
-            print("error", error)
-    length = len(all_text)
-    print("length", length)
-    length_per_page = length / total_pages
-    print("length_per_page", length_per_page)
-    nn = 50
-    if length / total_pages < nn:
-        print("file need to be scanned with details")
-        print("filepath :", path)
-        print("total_pages :", total_pages)
-        print("total_text_length :", length)
-        print("length_per_page :", length_per_page)
-        subprocess.call([
-            "ocrmypdf", "-l", "eng",
-            "--force-ocr",
-            path, ocr_file_name,
-        ])
-        subprocess.call(["git", "add", "-A"])
-        subprocess.call(["git", "commit", "-m", "added " + ocr_file_name])
-        subprocess.call(["git", "push"])
-    else:
-        print("file is already scanned")
+            text += reader.pages[i].extract_text()
+        except Exception:
+            return None
+    return len(text) / sample_size < threshold
 
 
-def try_main(i, nn=50):
-    try:
-        main(i, nn)
-    except Exception as e:
-        print(e)
-        print(traceback.format_exc())
-        print(sys.exc_info()[2])
-        sleep(10)
+def run_ocr(pdf_path):
+    ocr_path = pdf_path.replace(".pdf", "_ocr.pdf")
+    result = subprocess.run(
+        ["ocrmypdf", "-l", "eng", "--force-ocr", pdf_path, ocr_path],
+        capture_output=True, text=True,
+    )
+    return result.returncode == 0
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Batch OCR scanned PDFs")
+    parser.add_argument("--root", default="content/savita-bhabhi/episode-01-to-57", help="Root directory to scan")
+    parser.add_argument("--threshold", type=int, default=TEXT_THRESHOLD, help="Chars per page threshold")
+    parser.add_argument("--force", action="store_true", help="OCR even if already detected")
+    args = parser.parse_args()
+
+    pdfs = sorted(glob.glob(os.path.join(args.root, "**", "*.pdf"), recursive=True))
+
+    for pdf in pdfs:
+        try:
+            if args.force or needs_ocr(pdf, args.threshold):
+                run_ocr(pdf)
+        except Exception:
+            traceback.print_exc()
 
 
 if __name__ == "__main__":
-    import glob
-    files = glob.glob("content/savita-bhabhi/episode-01-to-57/**/*.pdf", recursive=True)
-    sorted_files = sorted(files)
-    files = sorted_files[::-1]
-    for i in files:
-        try_main(i, 200)
+    main()
