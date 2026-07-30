@@ -2,6 +2,10 @@
 
 A Python toolkit for downloading, merging, and OCR-processing PDF files from KirtuClub.
 
+> **Downloaded PDFs are not stored in the repo.** Grab sample assets from the
+> [Releases page](https://github.com/chirag127/kirtuclub-downloader/releases),
+> or run the downloader to fetch your own.
+
 ## Overview
 
 `kirtuclub-downloader` is a collection of Python utilities that automate the workflow of fetching scanned comic pages from KirtuClub, merging them into full PDF episodes, and running OCR to produce searchable PDFs. The project includes:
@@ -19,18 +23,15 @@ kirtuclub-downloader/
 ├── .gitignore
 ├── scripts/
 │   ├── download_images.py    # Download page images from KirtuClub
-│   ├── merge_pdfs.py         # Merge page PDFs into per-episode PDFs
+│   ├── merge_pdfs.py         # Merge page PDFs into per-episode PDF
 │   ├── ocr_batch.py          # Batch OCR processing on scanned PDFs
 │   └── utils.py              # Shared utility (HTTP download helper)
-├── tests/
-│   ├── test_utils.py         # Tests for utility functions
-│   └── test_merge_pdfs.py    # Tests for PDF merging
-└── content/
-    └── savita-bhabhi/
-        ├── episode-01-to-57/   # 57 episodes (original + OCR PDFs)
-        └── images/
-            └── episode-153/    # Sample downloaded page images
+└── tests/
+    ├── test_utils.py         # Tests for utility functions
+    └── test_merge_pdfs.py    # Tests for PDF merging
 ```
+
+The `content/` directory (created by the scripts) is git-ignored.
 
 ## Requirements
 

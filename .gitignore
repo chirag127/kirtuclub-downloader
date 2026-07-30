@@ -21,3 +21,13 @@ Thumbs.db
 
 # Test
 .pytest_cache/
+
+# Downloaded content — never commit; see Releases page for samples
+content/
+*.pdf
+*.zip
+*.cbz
+*.cbr
+*.jpg
+*.jpeg
+*.png
