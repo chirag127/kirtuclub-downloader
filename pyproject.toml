@@ -1,0 +1,51 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "kirtuclub-downloader"
+version = "1.0.0"
+description = "Unified CLI to download, assemble, OCR, and merge comic PDFs from KirtuClub"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [{ name = "Chirag Singhal" }]
+keywords = ["cli", "pdf", "ocr", "downloader", "comics", "scraper"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Environment :: Console",
+    "Topic :: Utilities",
+]
+dependencies = [
+    "click>=8.1",
+    "httpx>=0.27",
+    "pypdf>=5.0",
+    "img2pdf>=0.5",
+    "rich>=13.0",
+    "ocrmypdf>=16.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/chirag127/kirtuclub-downloader"
+Repository = "https://github.com/chirag127/kirtuclub-downloader"
+Issues = "https://github.com/chirag127/kirtuclub-downloader/issues"
+
+[project.scripts]
+kirtuclub = "kirtuclub_downloader.cli:cli"
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "ruff>=0.6"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/kirtuclub_downloader"]
+
+[tool.ruff]
+line-length = 79
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
