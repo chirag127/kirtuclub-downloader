@@ -127,7 +127,9 @@ def merge(content_dir, root, out_path):  # noqa: ANN001
     if pipeline.merge_pdfs(pdfs, dest, cfg):
         console.print(f"[green]Merged {len(pdfs)} PDFs → {dest}[/green]")
     else:
-        console.print("[yellow]Merge skipped (empty or over size cap).[/yellow]")
+        console.print(
+            "[yellow]Merge skipped (empty or over size cap).[/yellow]"
+        )
 
 
 @cli.command()

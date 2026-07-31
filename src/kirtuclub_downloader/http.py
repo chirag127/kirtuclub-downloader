@@ -27,7 +27,7 @@ class Downloader:
     def close(self) -> None:
         self._client.close()
 
-    def __enter__(self) -> "Downloader":
+    def __enter__(self) -> Downloader:
         return self
 
     def __exit__(self, *_exc: object) -> None:

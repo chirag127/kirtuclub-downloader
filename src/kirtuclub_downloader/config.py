@@ -35,7 +35,9 @@ class Config:
     concurrency: int = int(_env("CONCURRENCY", str(DEFAULT_CONCURRENCY)))
     max_pages: int = int(_env("MAX_PAGES", str(DEFAULT_MAX_PAGES)))
     ocr_lang: str = _env("OCR_LANG", DEFAULT_OCR_LANG)
-    text_threshold: int = int(_env("TEXT_THRESHOLD", str(DEFAULT_TEXT_THRESHOLD)))
+    text_threshold: int = int(
+        _env("TEXT_THRESHOLD", str(DEFAULT_TEXT_THRESHOLD))
+    )
     max_merge_mb: int = int(_env("MAX_MERGE_MB", str(DEFAULT_MAX_MERGE_MB)))
     user_agent: str = _env(
         "USER_AGENT",
