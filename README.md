@@ -1,86 +1,117 @@
 # kirtuclub-downloader
 
-[![CI](https://github.com/chirag127/kirtuclub-downloader/actions/workflows/ci.yml/badge.svg)](https://github.com/chirag127/kirtuclub-downloader/actions/workflows/ci.yml)
-[![Stars](https://img.shields.io/github/stars/chirag127/kirtuclub-downloader?style=flat)](https://github.com/chirag127/kirtuclub-downloader/stargazers)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
+> A Python CLI to download, assemble, OCR, and merge comic-page PDFs from KirtuClub — one pipeline: download to topdf to ocr to merge.
 
-One CLI for the full comic-PDF workflow: **download → assemble → OCR → merge**.
+[![License](https://img.shields.io/github/license/chirag127/kirtuclub-downloader?style=flat-square)](LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/chirag127/kirtuclub-downloader?style=flat-square)](https://github.com/chirag127/kirtuclub-downloader/stargazers)
+[![Last commit](https://img.shields.io/github/last-commit/chirag127/kirtuclub-downloader?style=flat-square)](https://github.com/chirag127/kirtuclub-downloader/commits)
+[![Python](https://img.shields.io/badge/python-3.10+-blue?style=flat-square)](https://python.org)
 
-> **Releases (sample assets):** <https://github.com/chirag127/kirtuclub-downloader/releases>
-> Downloaded content is never committed — the tool writes to a git-ignored `content/`.
+**GHP landing** https://chirag127.github.io/kirtuclub-downloader/ · **Repo** https://github.com/chirag127/kirtuclub-downloader
 
-`kirtuclub` fetches page images, assembles them into per-episode PDFs, adds a
-searchable OCR text layer, and merges episodes into a single file — all from one
-command tree, no shell scripts to chain by hand.
+⭐ If this is useful, please star the repo — it helps others find it.
 
-## Install
+`kirtuclub-downloader` is a single command-line tool (`kirtuclub`) that automates a four-step pipeline: download page images from KirtuClub, assemble them into per-episode PDFs, add a searchable OCR text layer, and merge the results into one file. It targets adult-content material published on KirtuClub; this repository contains only code — no media is included or distributed.
 
-```bash
-pipx install git+https://github.com/chirag127/kirtuclub-downloader
-# or, from a clone:
-pip install -e .
+> Downloaded images and PDFs are not stored in the repo. The content directory the tool creates is git-ignored (along with `*.pdf`, `*.jpg`, `*.zip`, `*.cbz`, `*.cbr`). Run the tool to fetch your own.
+
+## Pipeline
+
+```mermaid
+flowchart LR
+    A[download] -->|page .jpg per episode| B[content/&lt;series&gt;/images]
+    B --> C[topdf]
+    C -->|per-episode .pdf| D[ocr]
+    D -->|ocrmypdf adds text layer| E[searchable PDFs]
+    E --> F[merge]
+    F -->|combine per folder| G[all_in_one.pdf]
 ```
 
-OCR needs the system `tesseract` + `ghostscript` binaries (via [OCRmyPDF]):
+## Features
+
+- **`download`** — fetches page images for a series/episode range from a configurable base URL into per-episode directories, skipping files that already exist.
+- **`topdf`** — assembles the downloaded images into per-episode PDFs.
+- **`ocr`** — detects text-less PDFs and runs `ocrmypdf` to add a searchable text layer (skips ones that already have text unless `--force`).
+- **`merge`** — combines per-episode PDFs into a single `all_in_one.pdf`, respecting a size cap.
+- **`pipeline`** — runs all four stages end to end (`--skip-ocr` to skip OCR).
+- Rich terminal progress via [`rich`](https://github.com/Textualize/rich); CLI built with [`click`](https://click.palletsprojects.com).
+
+## Tech stack
+
+- **Python 3.10+**, packaged with a `pyproject.toml` (installable, exposes the `kirtuclub` entry point)
+- `click` (CLI), `rich` (progress/output), `requests` (HTTP), PDF assembly/merge libs
+- `ocrmypdf` invoked as a subprocess for the OCR step — its system dependencies (Tesseract, Ghostscript) must be installed separately
+- Tests with `pytest`; linting with `ruff`
+
+## Repo structure
+
+```
+kirtuclub-downloader/
+├── pyproject.toml                     # package metadata + `kirtuclub` entry point
+├── src/kirtuclub_downloader/
+│   ├── cli.py                         # click CLI: download/topdf/ocr/merge/pipeline
+│   ├── pipeline.py                    # the pipeline steps (download, images_to_pdf, ocr, merge)
+│   ├── http.py                        # HTTP Downloader (session, retries)
+│   └── config.py                      # Config defaults (series, base URL, dirs)
+└── tests/
+    └── test_pipeline.py               # pipeline tests
+```
+
+The content directory (created at runtime) and all downloaded media are git-ignored.
+
+## Quick start
 
 ```bash
-# Debian/Ubuntu
-sudo apt-get install -y tesseract-ocr ghostscript
-# macOS
-brew install tesseract ghostscript
+git clone https://github.com/chirag127/kirtuclub-downloader && cd kirtuclub-downloader
+pip install -e .
+# also install ocrmypdf's system deps (Tesseract, Ghostscript) for the OCR step
+kirtuclub --help
 ```
 
 ## Usage
 
 ```bash
-kirtuclub --help                       # all subcommands
-kirtuclub download --episodes 1 57     # fetch page images for a range
-kirtuclub topdf                        # images → per-episode PDFs
-kirtuclub ocr                          # add searchable text layer
-kirtuclub merge                        # combine episodes into one PDF
-kirtuclub pipeline --episodes 1 57     # run all four end to end
+# run the whole pipeline for an episode range
+kirtuclub pipeline --series <slug> --episodes 1 57
+
+# or run stages individually
+kirtuclub download --series <slug> --episodes 1 57
+kirtuclub topdf    --series <slug>
+kirtuclub ocr                       # add OCR text layer
+kirtuclub merge                     # combine into all_in_one.pdf
 ```
 
-Every subcommand takes `--series`, `--content-dir`, and related flags; run
-`kirtuclub <cmd> --help` for details.
+Every subcommand supports `-h/--help` for its full argument list.
 
-### Configuration
+## Configuration
 
-All settings have sane defaults and can be overridden by CLI flags or `KIRTU_`
-environment variables:
+Configuration is via command-line flags (with sensible defaults in `config.py`), not environment variables:
 
-| Variable | Default | Meaning |
+| Flag | Command | Purpose |
 |---|---|---|
-| `KIRTU_SERIES` | `savita-bhabhi` | Series slug |
-| `KIRTU_BASE_URL` | KirtuClub uploads path | Image base URL |
-| `KIRTU_CONTENT_DIR` | `content` | Output directory (git-ignored) |
-| `KIRTU_CONCURRENCY` | `8` | Parallel download workers |
-| `KIRTU_MAX_PAGES` | `100` | Max pages probed per episode |
-| `KIRTU_OCR_LANG` | `eng` | Tesseract language |
-| `KIRTU_TEXT_THRESHOLD` | `50` | Chars/page below which OCR runs |
-| `KIRTU_MAX_MERGE_MB` | `90` | Skip merged files over this size |
+| `--series` | download / topdf / merge | series slug |
+| `--episodes START END` | download / pipeline | inclusive episode range |
+| `--content-dir` | all | base output directory |
+| `--base-url` | download | image base URL |
+| `--root` | ocr / merge | directory to scan |
+| `--force` | ocr | OCR even if text is detected |
+| `--out` | merge | merged output path |
+| `--skip-ocr` | pipeline | skip the OCR stage |
 
-## Development
+## Part of the oriz family
 
-```bash
-pip install -e ".[dev]" pillow
-ruff check .
-pytest -q
-```
+One of ~80 sites and tools in the oriz family. See [blog.oriz.in](https://blog.oriz.in).
 
-## How it works
+## Contributing
 
-```
-download  →  topdf      →  ocr           →  merge
-(images)     (img → PDF)   (ocrmypdf)       (per-episode → all-in-one)
-```
+Issues and PRs welcome. Keep changes minimal and never commit any downloaded media.
 
-The pipeline stages live in `src/kirtuclub_downloader/pipeline.py` and are pure
-functions the CLI and tests drive identically.
+## Status
+
+Maintained as a personal utility.
 
 ## License
 
-[MIT](LICENSE)
+MIT © Chirag Singhal — chirag@oriz.in
 
-[OCRmyPDF]: https://github.com/ocrmypdf/OCRmyPDF
+Conventional commits are the changelog.
